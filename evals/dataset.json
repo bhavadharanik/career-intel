@@ -1,0 +1,80 @@
+[
+  {
+    "id": "eval_001",
+    "description": "Skill gap identification — ML engineer role vs backend-heavy CV",
+    "cv_text": "Bhavadharani: 5 years software engineering at ThoughtWorks using Go, Kafka, Kubernetes, Docker. Currently ML Engineer at Elara using Claude via AWS Bedrock, Python. MSc Artificial Intelligence from Northumbria University. Personal project: RAG system with FAISS, BM25, hybrid search, LLM-as-judge evaluation.",
+    "jd_text": "Senior ML Engineer at Newpage. Requirements: Python, PyTorch, TensorFlow, MLOps, LLM fine-tuning, Hugging Face transformers, production ML systems, AWS SageMaker.",
+    "question": "What skills am I missing for this role?",
+    "expected_gaps": ["PyTorch", "TensorFlow", "fine-tuning", "SageMaker", "Hugging Face"],
+    "expected_confidence_range": [0.5, 1.0],
+    "check_type": "skill_gaps"
+  },
+  {
+    "id": "eval_002",
+    "description": "Experience alignment — positive match on Python and cloud",
+    "cv_text": "ML Engineer with Python, AWS Bedrock, LangChain, LangGraph multi-agent workflows. Built RAG pipeline with FAISS vector store, BM25 reranking, evaluation metrics (NDCG, MRR). MSc AI. Previously: Go microservices, Kafka, Kubernetes at ThoughtWorks.",
+    "jd_text": "AI Engineer role. Required: Python, LangChain, RAG, vector databases, AWS. Nice to have: Go, Kubernetes.",
+    "question": "How does my experience align with this job description?",
+    "expected_keywords": ["Python", "LangChain", "RAG", "AWS", "align"],
+    "expected_confidence_range": [0.6, 1.0],
+    "check_type": "alignment"
+  },
+  {
+    "id": "eval_003",
+    "description": "Interview preparation question — generates actionable advice",
+    "cv_text": "NeutroFi project: built multi-agent financial analysis tool using LangGraph StateGraph, LangChain tool-calling agents, Claude and GPT-4 as LLM backends. Implemented human-in-the-loop approval flows. Presented at university capstone.",
+    "jd_text": "AI Research Engineer. Will ask about multi-agent systems, LLM orchestration, tool-calling, agent evaluation, safety mechanisms.",
+    "question": "What should I prepare for the interview?",
+    "expected_keywords": ["LangGraph", "multi-agent", "tool", "prepare"],
+    "expected_confidence_range": [0.5, 1.0],
+    "check_type": "advice"
+  },
+  {
+    "id": "eval_004",
+    "description": "Best fit determination — two JDs, one better match",
+    "cv_text": "Software engineer specialising in Go microservices, Kafka, Docker. Currently transitioning to ML: built RAG pipeline, uses Python daily. No deep learning production experience. No PyTorch or model training.",
+    "jd_text": "Job A: Backend Go engineer. Kafka, gRPC, distributed systems. Job B: Senior ML Engineer. PyTorch, model training, MLflow, Kubeflow.",
+    "question": "Which job is the best fit for me?",
+    "expected_keywords": ["Go", "backend", "fit", "Job A"],
+    "expected_confidence_range": [0.5, 1.0],
+    "check_type": "recommendation"
+  },
+  {
+    "id": "eval_005",
+    "description": "Low confidence when no documents uploaded",
+    "cv_text": "",
+    "jd_text": "",
+    "question": "What are my skill gaps?",
+    "expected_confidence_range": [0.0, 0.1],
+    "check_type": "no_context"
+  },
+  {
+    "id": "eval_006",
+    "description": "Selling points extraction — candidate's strengths for role",
+    "cv_text": "5 years production software engineering. Strong Python. Built end-to-end RAG system: document ingestion, chunking, FAISS embeddings, BM25 reranking, hybrid RRF fusion, LLM-as-judge evaluation. Evaluation metrics: Precision, Recall, F1, MRR, NDCG. LangGraph multi-agent system for financial analysis.",
+    "jd_text": "ML Engineer. Seeking Python expertise, RAG experience, evaluation methodology, agentic workflow experience. Team values rigorous engineering practices.",
+    "question": "What are my strongest selling points for this role?",
+    "expected_keywords": ["RAG", "evaluation", "Python", "LangGraph"],
+    "expected_confidence_range": [0.6, 1.0],
+    "check_type": "strengths"
+  },
+  {
+    "id": "eval_007",
+    "description": "Critical gap — no model training experience for research role",
+    "cv_text": "ML Engineer using pre-trained models via API. Claude Haiku via AWS Bedrock. No model training, no fine-tuning, no custom neural architecture work. Strong in RAG, prompt engineering, LangChain pipelines.",
+    "jd_text": "AI Research Scientist. Must have: PyTorch model training, custom architecture design, RLHF, model fine-tuning, academic research background, published papers.",
+    "question": "Am I ready for this research scientist role?",
+    "expected_gaps": ["model training", "fine-tuning", "PyTorch", "research", "publications"],
+    "expected_confidence_range": [0.5, 1.0],
+    "check_type": "readiness"
+  },
+  {
+    "id": "eval_008",
+    "description": "Follow-up questions are relevant and non-trivial",
+    "cv_text": "ML Engineer. Python, LangChain, RAG, LangGraph. AWS Bedrock. MSc AI. 5 years prior backend engineering.",
+    "jd_text": "Applied AI Engineer. Python, LLMs, RAG systems, production deployment.",
+    "question": "How can I improve my chances of getting this job?",
+    "expected_confidence_range": [0.5, 1.0],
+    "check_type": "follow_ups_non_trivial"
+  }
+]
