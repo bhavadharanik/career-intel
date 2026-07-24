@@ -10,9 +10,11 @@ A full-stack RAG application that lets candidates upload their CV and job descri
 # 1. Clone and enter the repo
 git clone <repo-url> career-intel && cd career-intel
 
-# 2. Set up environment
+# 2. Add your API keys
 cp .env.example .env
-# Edit .env and add your OPENAI_API_KEY and LANGCHAIN_API_KEY
+# Open .env and fill in:
+#   OPENAI_API_KEY   — required for embeddings and the LLM
+#   LANGCHAIN_API_KEY — optional, only needed if you want LangSmith tracing
 
 # 3. Install dependencies
 make install
