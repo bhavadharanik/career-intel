@@ -68,7 +68,7 @@ flowchart TD
 
     subgraph rag ["src/rag/"]
         VectorStore[vectorstore.py\nChromaDB\n2 collections: cv + jd\nPersisted to ./chroma_db]
-        Retriever[retriever.py\nSimilarity search\nwith score filtering ≥ 0.3]
+        Retriever[retriever.py\nSimilarity search\nwith rank-based scoring]
         VectorStore --> Retriever
     end
 
@@ -100,7 +100,7 @@ flowchart TD
 ### Embedding and Retrieval
 - **Model**: `text-embedding-3-small` — OpenAI's best price/quality tradeoff for semantic search. 1536 dimensions.
 - **Vector DB**: ChromaDB with disk persistence at `./chroma_db`. Two separate collections (`cv_documents`, `jd_documents`) so retrieval can be scoped or merged depending on the question.
-- **Retrieval strategy**: `similarity_search_with_relevance_scores` returns cosine similarity scores alongside documents. A threshold of 0.3 filters out irrelevant chunks before they reach the LLM. This avoids "context poisoning" from low-signal chunks.
+- **Retrieval strategy**: `similarity_search` returns the top-k closest chunks by ChromaDB's internal distance metric. Results are assigned rank-based scores (1.0 for rank 1, decaying by position) rather than raw cosine similarity, because ChromaDB with L2 distance returns scores outside [0,1] — including negative values — which makes threshold filtering unreliable.
 - **Top-K**: 6 chunks across both collections, merged and sorted by score.
 
 ### Structured Output (No Hand-Parsed JSON)
@@ -124,7 +124,7 @@ The LLM is prompted to set `confidence` based on how well the retrieved context 
 | Vector DB | ChromaDB | Persists to disk — no re-embedding on restart |
 | Structured output | `.with_structured_output(CareerAnswer)` | Eliminates hand-parsing, type-safe at runtime |
 | Two collections | cv + jd separate | Enables scoped retrieval and cross-collection merge |
-| Score threshold | 0.3 cosine | Filters noise without over-filtering relevant chunks |
+| Score assignment | Rank-based (1.0 → 0.5 decay) | ChromaDB L2 scores are negative and unreliable for threshold filtering |
 
 ---
 

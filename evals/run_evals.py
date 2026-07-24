@@ -148,7 +148,7 @@ def _run_case(case: dict[str, Any], verbose: bool) -> dict[str, Any]:
     if check_type in ("skill_gaps", "readiness"):
         expected_gaps = case.get("expected_gaps", [])
         if expected_gaps:
-            gap_text = " ".join(answer.answer)
+            gap_text = answer.answer
             if answer.skill_gaps:
                 gap_text += " " + " ".join(g.skill for g in answer.skill_gaps)
             scores = _semantic_contains(gap_text, expected_gaps)
