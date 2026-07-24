@@ -2,8 +2,6 @@
 
 A full-stack RAG application that lets candidates upload their CV and job descriptions, then ask natural language questions about fit, skill gaps, and interview preparation.
 
-Built as a take-home assignment for Newpage Solutions.
-
 ---
 
 ## Quickstart
@@ -178,11 +176,29 @@ The LLM is prompted to set `confidence` based on how well the retrieved context 
 
 ---
 
+## Screenshots
+
+**Main answer view** — 80% confidence, sources cited, structured response:
+
+![Main answer](screenshots/01-main-answer.png)
+
+**Skill gaps** — critical gaps (🔴) and nice-to-have gaps (🟡) with suggestions:
+
+![Skill gaps](screenshots/02-skill-gaps.png)
+
+**Follow-up questions** — suggested next questions based on the answer:
+
+![Follow-up questions](screenshots/03-follow-up-questions.png)
+
+---
+
 ## How AI Tools Were Used
 
-- GitHub Copilot / Claude used for: boilerplate generation (Pydantic schemas, test scaffolding), reviewing test coverage gaps, drafting the system prompt.
-- All architectural decisions, the retrieval strategy, structured output approach, and evaluation methodology were designed and reasoned through by the author.
-- The evaluation dataset was written manually to test named behaviours, not auto-generated.
+I used Claude to speed up the boilerplate parts like Pydantic schemas and test scaffolding. The system prompt went through a few iterations after testing with real documents because the first version wasn't specific enough about the output format.
+
+Decisions like rank-based scoring, splitting CV and JD into separate collections, and using structured output instead of parsing JSON from the LLM were things I worked through myself. The ChromaDB negative score issue was something I had to debug after seeing the retriever return empty results.
+
+The eval dataset covers one case per behaviour so failures are easy to trace.
 
 ---
 
