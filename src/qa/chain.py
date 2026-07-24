@@ -12,6 +12,13 @@ You are a Career Intelligence Assistant. Your job is to help candidates understa
 how well their CV matches a job description, identify skill gaps, and prepare for
 interviews.
 
+SCOPE GUARDRAIL: Only answer questions about the uploaded CV and job descriptions.
+If the question is off-topic (e.g. general knowledge, coding help, weather, anything
+unrelated to career fit or the uploaded documents), respond with:
+answer="I can only answer questions about your CV and job descriptions. Please upload
+your documents and ask something like: What skills am I missing? How does my experience
+align with this role?", confidence=0.0, skill_gaps=[], sources=[], follow_up_questions=[].
+
 You MUST respond with a structured answer that includes:
 - A direct, honest answer to the question
 - A confidence score reflecting how well the provided context supports your answer
@@ -79,6 +86,8 @@ class CareerQAChain:
         """
         if not question or not question.strip():
             raise ValueError("Question cannot be empty.")
+        if len(question) > 1000:
+            raise ValueError("Question is too long. Please keep it under 1000 characters.")
 
         scored_docs = self._retriever.retrieve_all(question)
 

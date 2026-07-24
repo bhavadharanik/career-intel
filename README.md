@@ -103,6 +103,32 @@ flowchart TD
 - **Retrieval strategy**: `similarity_search` returns the top-k closest chunks by ChromaDB's internal distance metric. Results are assigned rank-based scores (1.0 for rank 1, decaying by position) rather than raw cosine similarity, because ChromaDB with L2 distance returns scores outside [0,1] — including negative values — which makes threshold filtering unreliable.
 - **Top-K**: 6 chunks across both collections, merged and sorted by score.
 
+### Prompt Engineering
+
+The system prompt went through a few iterations. The first version just said "answer questions about the CV and JD" — too vague. The LLM kept returning freeform text even when structured output was configured, because the prompt didn't specify what each field was for.
+
+The final prompt does three things explicitly:
+1. Defines what each output field means (answer, confidence, skill_gaps, sources, follow_up_questions) so the LLM populates them intentionally, not by guessing
+2. Instructs the LLM to tie confidence to how well the *context* supports the answer, not general certainty — this prevents confident-but-hallucinated responses
+3. Includes a scope guardrail that catches off-topic questions before they reach the retriever
+
+### Context Management
+
+Top-k is set to 6 chunks across both collections. At 500 characters per chunk, that's roughly 3,000 characters of context — well within gpt-4o-mini's 128k context window, leaving plenty of room for the system prompt and structured output schema. The two-collection design means context is always a mix of CV and JD chunks rather than dominated by whichever document is larger.
+
+### Guardrails
+
+| Guardrail | Where | What it catches |
+|---|---|---|
+| Off-topic scope check | System prompt | Questions unrelated to career fit or uploaded docs |
+| Empty question | `chain.py` input validation | Blank or whitespace-only input |
+| Question length limit | `chain.py` input validation | Questions over 1000 characters |
+| Empty PDF | `parser.py` | Image-only PDFs with no extractable text |
+| No documents uploaded | `chain.py` retriever check | Questions asked before any files are ingested |
+| Low-confidence signal | LLM instruction | Instructs LLM to set confidence < 0.4 when context is thin |
+
+What's not implemented (would add in production): rate limiting per user, PII redaction before embedding, output filtering for harmful content.
+
 ### Structured Output (No Hand-Parsed JSON)
 The chain uses `.with_structured_output(CareerAnswer)` which constrains the LLM to emit valid JSON matching the Pydantic schema. This means:
 - No `json.loads()` anywhere in the codebase
@@ -196,11 +222,17 @@ The LLM is prompted to set `confidence` based on how well the retrieved context 
 
 ## How AI Tools Were Used
 
-I used Claude to speed up the boilerplate parts like Pydantic schemas and test scaffolding. The system prompt went through a few iterations after testing with real documents because the first version wasn't specific enough about the output format.
+I used Claude throughout the build, mainly for boilerplate: Pydantic schemas, test file scaffolding, and a first draft of the system prompt.
 
-Decisions like rank-based scoring, splitting CV and JD into separate collections, and using structured output instead of parsing JSON from the LLM were things I worked through myself. The ChromaDB negative score issue was something I had to debug after seeing the retriever return empty results.
+Where I let it generate freely: repetitive structure that I'd have to write anyway (dataclass definitions, pytest fixtures, the Makefile). Fast to review, low risk of subtle bugs.
 
-The eval dataset covers one case per behaviour so failures are easy to trace.
+Where I didn't use it: architectural decisions, debugging, and the eval dataset. The two-collection ChromaDB design, rank-based scoring, and structured output approach were things I reasoned through myself. The ChromaDB negative score bug was something I had to find and fix by reading the retriever output. The eval dataset I wrote case by case so I understood exactly what each one was testing.
+
+How I kept it maintainable: I reviewed every generated file before committing. If generated code had a pattern I didn't understand or wouldn't write myself, I rewrote it. The rule I followed was: if I couldn't explain every line in a code review, I didn't ship it.
+
+What worked well: using it for boilerplate, asking it to suggest edge cases for tests, getting a first draft of config and CI files fast.
+
+What I avoided: using it for anything involving data flow decisions, trusting generated error handling (it tends to swallow exceptions), and letting it write tests without checking the assertions actually tested the right thing.
 
 ---
 
