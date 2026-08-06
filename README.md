@@ -46,6 +46,24 @@ make test
 make evals
 ```
 
+**To run the MCP server (Claude Desktop / Cursor):**
+```bash
+make mcp
+```
+
+Or add directly to Claude Desktop's `mcp_servers` config:
+```json
+{
+  "career-intel": {
+    "command": "python",
+    "args": ["-m", "src.mcp_server"],
+    "cwd": "/path/to/career-intel"
+  }
+}
+```
+
+The MCP server exposes five tools: `upload_cv`, `upload_job_description`, `ask`, `list_loaded_documents`, and `reset_documents`. Any MCP-compatible client can use these to query career fit and skill gaps without going through the Streamlit UI.
+
 ---
 
 ## Architecture

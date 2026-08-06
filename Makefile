@@ -1,4 +1,4 @@
-.PHONY: install run test evals lint docker-build docker-run clean help
+.PHONY: install run mcp test evals lint docker-build docker-run clean help
 
 PYTHON := python3
 VENV := .venv
@@ -10,6 +10,7 @@ help:
 	@echo "Career Intelligence Assistant — available targets:"
 	@echo "  make install      Create venv and install dependencies"
 	@echo "  make run          Start the Streamlit app"
+	@echo "  make mcp          Start the MCP server (for Claude Desktop / Cursor)"
 	@echo "  make test         Run pytest test suite"
 	@echo "  make evals        Run LLM evaluation suite (requires OPENAI_API_KEY)"
 	@echo "  make lint         Run ruff linter"
@@ -25,6 +26,9 @@ install:
 
 run:
 	$(STREAMLIT) run app.py
+
+mcp:
+	$(VENV)/bin/python -m src.mcp_server
 
 test:
 	$(PYTEST) tests/ -v --tb=short
