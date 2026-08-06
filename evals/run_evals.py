@@ -84,6 +84,110 @@ def _semantic_contains(answer_text: str, expected_terms: list[str]) -> dict[str,
     }
 
 
+# ─── LLM-as-judge ────────────────────────────────────────────────────────────
+
+
+def _llm_judge_groundedness(answer: str, context: str) -> dict[str, Any]:
+    """
+    LLM-as-judge: direct assessment of whether the answer is grounded in context.
+
+    Scores 0.0-1.0. A grounded answer only makes claims supported by the
+    retrieved chunks — it does not hallucinate facts not present in context.
+    """
+    from openai import OpenAI
+    from src.config import OPENAI_API_KEY
+
+    client = OpenAI(api_key=OPENAI_API_KEY)
+
+    prompt = f"""You are an expert evaluator assessing whether an AI answer is grounded in the provided context.
+
+CONTEXT (retrieved document chunks):
+{context}
+
+ANSWER TO EVALUATE:
+{answer}
+
+Score the answer on GROUNDEDNESS: does every factual claim in the answer come from the context above?
+
+Respond in this exact JSON format:
+{{
+  "score": <float between 0.0 and 1.0>,
+  "reasoning": "<one sentence explanation>",
+  "hallucinated_claims": ["<any claims not supported by context>"]
+}}
+
+Score guide:
+1.0 = every claim is directly supported by the context
+0.7 = most claims supported, minor extrapolation
+0.5 = mix of grounded and ungrounded claims
+0.3 = significant claims not in context
+0.0 = answer ignores context entirely"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0,
+        response_format={"type": "json_object"},
+    )
+
+    import json as _json
+    parsed = _json.loads(response.choices[0].message.content)
+    return {
+        "score": float(parsed.get("score", 0.0)),
+        "reasoning": parsed.get("reasoning", ""),
+        "hallucinated_claims": parsed.get("hallucinated_claims", []),
+        "passed": float(parsed.get("score", 0.0)) >= 0.7,
+    }
+
+
+def _llm_judge_pairwise(question: str, answer_a: str, answer_b: str) -> dict[str, Any]:
+    """
+    LLM-as-judge: pairwise comparison of two answers to the same question.
+
+    Returns which answer is better (A, B, or tie) and why.
+    Used to compare prompt variants or retrieval strategies.
+    """
+    from openai import OpenAI
+    from src.config import OPENAI_API_KEY
+
+    client = OpenAI(api_key=OPENAI_API_KEY)
+
+    prompt = f"""You are an expert evaluator comparing two AI answers to the same career question.
+
+QUESTION: {question}
+
+ANSWER A:
+{answer_a}
+
+ANSWER B:
+{answer_b}
+
+Which answer is better for a candidate trying to understand their career fit?
+Consider: accuracy, specificity, actionability, and clarity.
+
+Respond in this exact JSON format:
+{{
+  "winner": "<A, B, or tie>",
+  "reasoning": "<two sentence explanation>",
+  "scores": {{"A": <0.0-1.0>, "B": <0.0-1.0>}}
+}}"""
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0,
+        response_format={"type": "json_object"},
+    )
+
+    import json as _json
+    parsed = _json.loads(response.choices[0].message.content)
+    return {
+        "winner": parsed.get("winner", "tie"),
+        "reasoning": parsed.get("reasoning", ""),
+        "scores": parsed.get("scores", {}),
+    }
+
+
 # ─── Per-eval-case runner ─────────────────────────────────────────────────────
 
 
@@ -114,6 +218,12 @@ def _run_case(case: dict[str, Any], verbose: bool) -> dict[str, Any]:
         start = time.time()
         answer: CareerAnswer = chain.ask(case["question"])
         latency_ms = int((time.time() - start) * 1000)
+
+        # Retrieve context separately for groundedness checks
+        scored_docs = retriever.retrieve_all(case["question"])
+        retrieved_context = "\n\n---\n\n".join(
+            f"[{i+1}] {sd.content}" for i, sd in enumerate(scored_docs)
+        )
 
     result: dict[str, Any] = {
         "id": eval_id,
@@ -206,6 +316,31 @@ def _run_case(case: dict[str, Any], verbose: bool) -> dict[str, Any]:
                 "passed": False,
             }
             result["passed"] = False
+        return result
+
+    if check_type == "groundedness":
+        if retrieved_context.strip():
+            judge_result = _llm_judge_groundedness(answer.answer, retrieved_context)
+            result["checks"]["groundedness"] = judge_result
+            result["passed"] = conf_ok and judge_result["passed"]
+        else:
+            result["checks"]["groundedness"] = {"passed": False, "reasoning": "No context retrieved"}
+            result["passed"] = False
+        return result
+
+    if check_type == "pairwise":
+        # Run a second answer with a simpler prompt variant for comparison
+        variant_question = case.get("variant_question", case["question"])
+        answer_b: CareerAnswer = chain.ask(variant_question)
+        pairwise_result = _llm_judge_pairwise(
+            question=case["question"],
+            answer_a=answer.answer,
+            answer_b=answer_b.answer,
+        )
+        result["checks"]["pairwise"] = pairwise_result
+        result["answer_b_preview"] = answer_b.answer[:200]
+        # Pass if answer A wins or ties
+        result["passed"] = conf_ok and pairwise_result["winner"] in ("A", "tie")
         return result
 
     # Default: only confidence check

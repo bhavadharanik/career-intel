@@ -76,5 +76,24 @@
     "question": "How can I improve my chances of getting this job?",
     "expected_confidence_range": [0.5, 1.0],
     "check_type": "follow_ups_non_trivial"
+  },
+  {
+    "id": "eval_009",
+    "description": "Groundedness — answer must be supported by retrieved context, not hallucinated",
+    "cv_text": "ML Engineer at Elara. Built LLM features using Claude Haiku via AWS Bedrock. Python, FastAPI. Previously at ThoughtWorks: Go, Kafka, Kubernetes, Docker. MSc Artificial Intelligence, Northumbria University.",
+    "jd_text": "Senior AI Engineer. Requirements: Python, LLMs, RAG, LangChain, LangGraph, AWS, production deployment experience.",
+    "question": "What is my most relevant experience for this role?",
+    "expected_confidence_range": [0.5, 1.0],
+    "check_type": "groundedness"
+  },
+  {
+    "id": "eval_010",
+    "description": "Pairwise — specific question outperforms vague variant",
+    "cv_text": "Software engineer with 5 years experience. Python, Go, Kafka, Docker, Kubernetes. Currently building RAG pipelines and LangGraph agents. MSc AI. Personal projects: DocAssist (RAG + hybrid search), NeutroFi (multi-agent LangGraph).",
+    "jd_text": "AI Engineer. Python, RAG, LangChain, LangGraph, vector databases, AWS. Team values clear communication and production-grade code.",
+    "question": "What specific skills from my background make me a strong candidate for this AI Engineer role?",
+    "variant_question": "Am I a good fit?",
+    "expected_confidence_range": [0.5, 1.0],
+    "check_type": "pairwise"
   }
 ]
